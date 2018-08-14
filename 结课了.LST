@@ -1,0 +1,357 @@
+C51 COMPILER V9.01   结课了                                                                08/14/2018 00:55:40 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE 结课了
+OBJECT MODULE PLACED IN 结课了.OBJ
+COMPILER INVOKED BY: G:\KI\C51\BIN\C51.EXE 结课了.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <reg51.h>
+   2          #define T 80         
+   3          #define uint unsigned int
+   4          #define uchar unsigned char
+   5                  void start(void);          //初值函数
+   6                  void zjs(void);            //正计时函数
+   7                  void mode(void);          //mode 扫描函数
+   8                  void modess(void);       //mode 时钟闪烁函数
+   9                  void xmodess(void);       //mode 闹钟闪烁函数
+  10                  void check(void);         //检查函数
+  11                  void jia(void);          //加法键函数
+  12                  void huxi(void);      //呼吸灯函数
+  13                  void delayms(uint z);     //延时函数
+  14          
+  15          
+  16                  uchar xliang[]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90}; //段选码 小亮 共阳
+  17                  uchar dliang[]={0x80,0x40,/*0x20,*/0x10,0x08,/*0x04,*/0x02,0x01}; //位选码 大亮
+  18                  uchar second,minute,hour,x,i,cases=0,t0=0,j,reset=0,second_1,minute_1,hour_1;
+  19                  uchar asecond=0,aminute=0,ahour=0;
+  20                  uchar add[]={0,0,0,0,0,0,0,0};
+  21                  uchar bdd[]={0,0,0,0,0,0,0,0};
+  22                  uint light=0;
+  23          
+  24                  sbit P33 = P3^3;                          //mode
+  25                  sbit P32 = P3^2;                          //move
+  26                  sbit P34 = P3^4;                          //闹钟
+  27                  sbit P35 = P3^5;                          //加
+  28                  sbit P17 = P1^7;                          //呼吸灯
+  29          
+  30          
+  31          void main()                                                //主函数
+  32          {       
+  33   1              start();
+  34   1              while(1)                                             
+  35   1              {       
+  36   2                      huxi();
+  37   2                      if(cases==1)
+  38   2                      {
+  39   3                              second_1= second;          //second_1作为辅助
+  40   3                              minute_1= minute;
+  41   3                              hour_1 = hour;
+  42   3                              jia();
+  43   3                              second = second_1;
+  44   3                              minute = minute_1;
+  45   3                              hour = hour_1;
+  46   3                      }
+  47   2                      if(cases==2)
+  48   2                      {
+  49   3                              second_1= asecond;         //second_1作为辅助
+  50   3                              minute_1= aminute;
+  51   3                              hour_1 = ahour;
+  52   3                              jia();
+  53   3                              asecond = second_1;
+  54   3                              aminute = minute_1;
+  55   3                              ahour = hour_1;
+C51 COMPILER V9.01   结课了                                                                08/14/2018 00:55:40 PAGE 2   
+
+  56   3                      }
+  57   2              }
+  58   1      }
+  59          
+  60          void start(void)                               //初值函数
+  61          {
+  62   1              TMOD = 0x01;
+  63   1              IE = 0x87;
+  64   1              TH0 = (65536-45872)/256;
+  65   1              TL0 = (65536-45872)%256;
+  66   1              IT0 = 0;
+  67   1              IT1 = 0;
+  68   1              IP = 0x02;
+  69   1              TR0 = 1;
+  70   1              P17=0;
+  71   1                      
+  72   1      } 
+  73          
+  74          void modess(void)                                                               //实现0.5s亮灭闪烁 时钟闪烁函数
+  75          {
+  76   1              P2 = 0x24;         //00100100
+  77   1              P0 = 0xbf;         //10111111
+  78   1              delayms(5);
+  79   1                      
+  80   1              if((reset==0) && (t0>9))        P2 = 0;
+  81   1              else    P2 = dliang[0];
+  82   1              P0 = xliang[add[0]];
+  83   1              delayms(5);
+  84   1      
+  85   1               if((reset==0) && (t0>9))       P2 = 0;
+  86   1              else    P2 = dliang[1]; 
+  87   1              P0 = xliang[add[1]];
+  88   1              delayms(5);
+  89   1      
+  90   1              if((reset==1) && (t0>9))        P2 = 0;
+  91   1              else    P2 = dliang[2];
+  92   1              P0 = xliang[add[2]];
+  93   1              delayms(5);
+  94   1      
+  95   1              if((reset==1) && (t0>9))        P2 = 0;
+  96   1              else    P2 = dliang[3];
+  97   1              P0 = xliang[add[3]];
+  98   1              delayms(5);
+  99   1      
+ 100   1              if((reset==2) && (t0>9))        P2 = 0;
+ 101   1              else    P2 = dliang[4];
+ 102   1              P0 = xliang[add[4]];
+ 103   1              delayms(5);
+ 104   1      
+ 105   1              if((reset==2) && (t0>9))        P2 = 0;
+ 106   1              else    P2 = dliang[5];
+ 107   1              P0 = xliang[add[5]];
+ 108   1              delayms(5);
+ 109   1      }
+ 110          
+ 111          void xmodess(void)                                                              //实现0.5s亮灭闪烁 闹钟闪烁函数
+ 112          {
+ 113   1              P2 = 0x24;         //00100100
+ 114   1              P0 = 0xbf;         //10111111
+ 115   1              delayms(5);
+ 116   1                      
+ 117   1              if((reset==0) && (t0>9))        P2 = 0;
+C51 COMPILER V9.01   结课了                                                                08/14/2018 00:55:40 PAGE 3   
+
+ 118   1              else    P2 = dliang[0];
+ 119   1              P0 = xliang[bdd[0]];
+ 120   1              delayms(5);
+ 121   1      
+ 122   1               if((reset==0) && (t0>9))       P2 = 0;
+ 123   1              else    P2 = dliang[1]; 
+ 124   1              P0 = xliang[bdd[1]];
+ 125   1              delayms(5);
+ 126   1      
+ 127   1              if((reset==1) && (t0>9))        P2 = 0;
+ 128   1              else    P2 = dliang[2];
+ 129   1              P0 = xliang[bdd[2]];
+ 130   1              delayms(5);
+ 131   1      
+ 132   1              if((reset==1) && (t0>9))        P2 = 0;
+ 133   1              else    P2 = dliang[3];
+ 134   1              P0 = xliang[bdd[3]];
+ 135   1              delayms(5);
+ 136   1      
+ 137   1              if((reset==2) && (t0>9))        P2 = 0;
+ 138   1              else    P2 = dliang[4];
+ 139   1              P0 = xliang[bdd[4]];
+ 140   1              delayms(5);
+ 141   1      
+ 142   1              if((reset==2) && (t0>9))        P2 = 0;
+ 143   1              else    P2 = dliang[5];
+ 144   1              P0 = xliang[bdd[5]];
+ 145   1              delayms(5);
+ 146   1      }
+ 147          
+ 148          void mode(void)                  //mode 扫描函数
+ 149          {
+ 150   1              for(i=0;i<6;i++)
+ 151   1              {
+ 152   2                      P2=dliang[i];
+ 153   2                      P0=xliang[add[i]];
+ 154   2                      delayms(5);
+ 155   2                      /*      P0=0xff; */
+ 156   2      
+ 157   2      
+ 158   2              }
+ 159   1              /*              //亮出  0     1    2     3        4       5        6   7        8        9
+ 160   1              uchar xliang[]={0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90};                //段选码 小亮 共阳   P
+             -0
+ 161   1              uchar dliang[]={0x80,0x40,0x20,0x10,0x08,0x04,0x02,0x01}; */             //位选码 大亮    P2
+ 162   1                                      //第8     7        6      5              4              3          2     1       个灯亮                           
+ 163   1          P2=0x24;            //改为24          原为c0
+ 164   1              P0=0xbf;
+ 165   1              delayms(5);     
+ 166   1      }
+ 167          
+ 168          void jia(void)                  //就是加啊
+ 169          {
+ 170   1              if(P35 == 0)
+ 171   1              {
+ 172   2                      delayms(5);               //消抖确保其一直连着
+ 173   2                      if(P35 == 0)
+ 174   2                      {
+ 175   3                              switch(reset)
+ 176   3                              {
+ 177   4                                      case 0 :
+ 178   4                                              {
+C51 COMPILER V9.01   结课了                                                                08/14/2018 00:55:40 PAGE 4   
+
+ 179   5                                                      second_1++;
+ 180   5                                                      if(second_1 > 59)
+ 181   5                                                              second_1 = 0;                                           
+ 182   5                                              } break;
+ 183   4                                      case 1 :
+ 184   4                                              {
+ 185   5                                                      minute_1++;
+ 186   5                                                      if(minute_1 > 59)
+ 187   5                                                              minute_1 = 0;                                           
+ 188   5                                              } break;
+ 189   4                                      case 2 :
+ 190   4                                              {
+ 191   5                                                      hour_1++;
+ 192   5                                                      if(hour_1 > 24)
+ 193   5                                                              hour_1 = 0;                                     
+ 194   5                                              }
+ 195   4                                      default : break; 
+ 196   4                              }
+ 197   3      
+ 198   3                      }
+ 199   2                      while(P35 == 0);
+ 200   2              }               
+ 201   1      }
+ 202          
+ 203          void ms() interrupt 0   //模式外部中断
+ 204          {
+ 205   1              delayms(5);
+ 206   1              if(P32==0)
+ 207   1              {
+ 208   2                      cases++;
+ 209   2                      reset=0;
+ 210   2                      if(cases==3)
+ 211   2                      cases=0;
+ 212   2              }
+ 213   1              while(P32==0); 
+ 214   1      }
+ 215          
+ 216          void jssm() interrupt 1  //定时器内部中断   计时扫描
+ 217          {
+ 218   1              TH0=(65536-45872)/256;  //50ms
+ 219   1              TL0=(65536-45872)%256;
+ 220   1              /*P17=1*/;
+ 221   1              t0++;
+ 222   1              if(t0==20)
+ 223   1              {       
+ 224   2              /*      P17=0; */
+ 225   2                      t0=0;
+ 226   2                      if(cases!=1)
+ 227   2                      zjs();
+ 228   2                      check();
+ 229   2              }
+ 230   1                      if(cases==2)
+ 231   1                                 {
+ 232   2                                  bdd[0]=asecond%10;
+ 233   2                                      bdd[1]=asecond/10;
+ 234   2                                      bdd[2]=aminute%10;
+ 235   2                                      bdd[3]=aminute/10;
+ 236   2                                      bdd[4]=ahour%10;
+ 237   2                                      bdd[5]=ahour/10;
+ 238   2                                 }
+ 239   1                         else{
+ 240   2                                      add[0]=second%10; //0123456789
+C51 COMPILER V9.01   结课了                                                                08/14/2018 00:55:40 PAGE 5   
+
+ 241   2                                      add[1]=second/10;
+ 242   2                                      add[2]=minute%10;
+ 243   2                                      add[3]=minute/10;
+ 244   2                                      add[4]=hour%10;
+ 245   2                                      add[5]=hour/10; 
+ 246   2                                 }
+ 247   1                
+ 248   1              switch(cases)
+ 249   1              {
+ 250   2                      case 0 :mode();break;              //扫描
+ 251   2                      case 1 :modess();break;           //闪烁
+ 252   2                      case 2 :xmodess();break;                 //
+ 253   2                      default :break;
+ 254   2              }          
+ 255   1      }
+ 256          
+ 257          void move() interrupt 2         //移动reset中断
+ 258          {
+ 259   1              delayms(5);
+ 260   1              if(P33 == 0)
+ 261   1              {
+ 262   2                      reset++;                         //时分秒调节标志位
+ 263   2                      if(reset==3)
+ 264   2                      reset=0;
+ 265   2              }
+ 266   1              while(P33 == 0);        
+ 267   1      }
+ 268          
+ 269          void check (void)                                                                                                         
+ 270          {                                                                                                                                         
+ 271   1          if((hour == ahour) && (minute == aminute) && (second == asecond)) 
+ 272   1          {                                           
+ 273   2                      P17=1;
+ 274   2                      delayms(10000);
+ 275   2                      P17=0;                  
+ 276   2          }                                                                  
+ 277   1                                                                                              
+ 278   1      }                                                                                       
+ 279          void huxi(void)
+ 280          {
+ 281   1                      P17=0;
+ 282   1                      delayms(light);
+ 283   1                      P17=1;
+ 284   1                      delayms(T-light);
+ 285   1      
+ 286   1                      light++;                                          /*light递增，灯逐渐变亮*/
+ 287   1                      if(light==T)                              /*达到亮度最大后开始逐渐变暗*/
+ 288   1                      {
+ 289   2                              for(;light>0;light--)     /*跳出for循环的条件为light=0达到最暗*/
+ 290   2                              {
+ 291   3                                      P17=0;
+ 292   3                                      delayms(light);
+ 293   3                                      P17=0xff;
+ 294   3                                      delayms(T-light);
+ 295   3                              }
+ 296   2                      }
+ 297   1      }
+ 298          void zjs(void)  //正计时
+ 299          {       
+ 300   1              second++;
+ 301   1              if(second==60)
+ 302   1              {
+C51 COMPILER V9.01   结课了                                                                08/14/2018 00:55:40 PAGE 6   
+
+ 303   2                      minute++;
+ 304   2                      second=0;
+ 305   2              }
+ 306   1              if(minute==60)
+ 307   1              {
+ 308   2                      hour++;
+ 309   2                      minute=0;       
+ 310   2              }
+ 311   1              if(hour==24)
+ 312   1              {
+ 313   2                      hour=0;
+ 314   2              }       
+ 315   1      }
+ 316          
+ 317                                                                                                                                           ////////////////
+ 318          void delayms(uint z)            //延时函数
+ 319          {       
+ 320   1              uint i,j;
+ 321   1              for(i=z;i>0;i--);
+ 322   1                      for(j=110;j>0;j--);
+ 323   1      } 
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1098    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     49    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
