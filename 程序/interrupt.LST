@@ -1,0 +1,92 @@
+C51 COMPILER V9.01   INTERRUPT                                                             08/24/2018 00:21:11 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE INTERRUPT
+OBJECT MODULE PLACED IN interrupt.OBJ
+COMPILER INVOKED BY: G:\KI\C51\BIN\C51.EXE interrupt.c BROWSE INCDIR(..\Documents) DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "interrupt.h"
+   2           
+   3          void ms() interrupt 0   //模式外部中断
+   4          {
+   5   1              delayms(5);
+   6   1              if(P32==0)
+   7   1              {
+   8   2                      cases++;
+   9   2                      reset=0;
+  10   2                      if(cases==3)
+  11   2                      cases=0;
+  12   2              }
+  13   1              while(P32==0); 
+  14   1      }
+  15          
+  16          void jssm() interrupt 1  //定时器内部中断   计时扫描
+  17          {
+  18   1              TH0=(65536-45872)/256;  //50ms
+  19   1              TL0=(65536-45872)%256;
+  20   1              /*P17=1*/;
+  21   1              t0++;
+  22   1              if(t0==20)
+  23   1              {       
+  24   2              /*      P17=0; */
+  25   2                      t0=0;
+  26   2                      if(cases!=1)
+  27   2                      zjs();
+  28   2                      check();
+  29   2              }
+  30   1                      if(cases==2)
+  31   1                                 {
+  32   2                                  bdd[0]=asecond%10;
+  33   2                                      bdd[1]=asecond/10;
+  34   2                                      bdd[2]=aminute%10;
+  35   2                                      bdd[3]=aminute/10;
+  36   2                                      bdd[4]=ahour%10;
+  37   2                                      bdd[5]=ahour/10;
+  38   2                                 }
+  39   1                         else{
+  40   2                                      add[0]=second%10; //0123456789
+  41   2                                      add[1]=second/10;
+  42   2                                      add[2]=minute%10;
+  43   2                                      add[3]=minute/10;
+  44   2                                      add[4]=hour%10;
+  45   2                                      add[5]=hour/10; 
+  46   2                                 }
+  47   1                
+  48   1              switch(cases)
+  49   1              {
+  50   2                      case 0 :mode();break;              //扫描
+  51   2                      case 1 :modess();break;           //闪烁
+  52   2                      case 2 :xmodess();break;                 //
+  53   2                      default :break;
+  54   2              }          
+  55   1      }
+C51 COMPILER V9.01   INTERRUPT                                                             08/24/2018 00:21:11 PAGE 2   
+
+  56          
+  57          void move() interrupt 2         //移动reset中断
+  58          {
+  59   1              delayms(5);
+  60   1              if(P33 == 0)
+  61   1              {
+  62   2                      reset++;                         //时分秒调节标志位
+  63   2                      if(reset==3)
+  64   2                      reset=0;
+  65   2              }
+  66   1              while(P33 == 0);        
+  67   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    379    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,11 @@
+"STARTUP.obj",
+"interrupt.obj",
+"main.obj",
+"plus.obj",
+"check.obj",
+"delayms.obj",
+"display.obj",
+"start.obj",
+"time.obj",
+"pwm.obj" 
+TO "clock" 
